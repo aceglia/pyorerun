@@ -6,10 +6,11 @@ from ..abstract.markers import MarkerProperties
 
 
 class MarkersUpdater(Component):
-    def __init__(self, name, marker_properties: MarkerProperties, callable_markers: callable):
+    def __init__(self, name, marker_properties: MarkerProperties, callable_markers: callable, timeless=False):
         self.name = name + "/model_markers"
         self.marker_properties = marker_properties
         self.callable_markers = callable_markers
+        self.timeless=timeless
 
     @property
     def nb_markers(self) -> int:
@@ -28,6 +29,7 @@ class MarkersUpdater(Component):
                 colors=self.marker_properties.color_to_rerun(),
                 labels=self.marker_properties.markers_names,
             ),
+            timeless=self.timeless
         )
 
 

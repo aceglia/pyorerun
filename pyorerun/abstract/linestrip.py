@@ -35,7 +35,8 @@ class LineStripProperties:
         Returns a numpy array with the color of each marker.
     """
 
-    def __init__(self, strip_names: list[str, ...] | tuple[str, ...], radius: float | np.ndarray, color: np.ndarray):
+    def __init__(self, strip_names: list[str, ...] | tuple[str, ...], radius: float | np.ndarray,
+                 color: np.ndarray, timeless=False):
         """
         Constructs all the necessary attributes for the MarkerProperties object.
 
@@ -48,6 +49,7 @@ class LineStripProperties:
         color : np.ndarray
             the color of the markers
         """
+        self.timeless=timeless
         self.strip_names = strip_names
         self.radius = radius
         self.color = color

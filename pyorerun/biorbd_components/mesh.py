@@ -12,13 +12,14 @@ class TransformableMeshUpdater(Component):
     and always 'apply_transform' from its initial position
     """
 
-    def __init__(self, name: str, mesh: Trimesh, transform_callable: callable):
+    def __init__(self, name: str, mesh: Trimesh, transform_callable: callable, timeless=False):
         self.__name = name + "/" + mesh.metadata["file_name"]
         self.__mesh = mesh
 
         self.transformed_mesh = mesh.copy()
         self.__color = np.array([0, 0, 0])
         self.transform_callable = transform_callable
+        self.timeless= timeless
 
     def set_color(self, color: tuple[int, int, int]) -> None:
         self.__color = np.array(color)
@@ -34,10 +35,11 @@ class TransformableMeshUpdater(Component):
         )
 
     @classmethod
-    def from_file(cls, name, file_path: str, transform_callable) -> "TransformableMeshUpdater":
+    def from_file(cls, name, file_path: str, transform_callable, timeless=False) -> "TransformableMeshUpdater":
+
         if file_path.endswith(".stl") or file_path.endswith(".STL"):
             mesh = load(file_path, file_type="stl")
-            return cls(name, mesh, transform_callable)
+            return cls(name, mesh, transform_callable, timeless=timeless)
         if file_path.endswith(".vtp"):
             output = read_vtp_file(file_path)
             mesh = Trimesh(
@@ -46,7 +48,7 @@ class TransformableMeshUpdater(Component):
                 vertex_normals=output["normals"],
                 metadata={"file_name": file_path.split("/")[-1].split(".")[0]},
             )
-            return cls(name, mesh, transform_callable)
+            return cls(name, mesh, transform_callable, timeless=timeless)
 
     def apply_transform(self, homogenous_matrix: np.ndarray) -> Trimesh:
         """Apply a transform to the mesh from its initial position"""
@@ -71,7 +73,7 @@ class TransformableMeshUpdater(Component):
     def nb_components(self):
         return 1
 
-    def to_rerun(self, q: np.ndarray) -> None:
+    def to_rerun(self, q: np.ndarray, timeless=False) -> None:
         homogenous_matrices = self.transform_callable(q)
         rr.log(
             self.name,
@@ -79,10 +81,14 @@ class TransformableMeshUpdater(Component):
                 translation=homogenous_matrices[:3, 3],
                 mat3x3=homogenous_matrices[:3, :3],
             ),
+            timeless=self.timeless
+
         )
         rr.log(
             self.name,
             self.rerun_mesh,
+            timeless=self.timeless
+
         )
 
     @property

@@ -10,7 +10,7 @@ class BiorbdRerunPhase:
     A class to animate a biorbd model in rerun.
     """
 
-    def __init__(self, name, phase: int = 0):
+    def __init__(self, name, phase: int = 0, timeless=False):
         self.name = name
         self.phase = phase
         self.models = []
@@ -18,14 +18,17 @@ class BiorbdRerunPhase:
         self.q = []
         self.tracked_markers = []
         self.rerun_links = []
+        self.timeless=timeless
 
     @property
     def _rerun_links_without_none(self):
         return [rr_link for rr_link in self.rerun_links if rr_link is not None]
 
-    def add_animated_model(self, biomod: BiorbdModel, q: np.ndarray, tracked_markers: np.ndarray = None):
+    def add_animated_model(self, biomod: BiorbdModel, q: np.ndarray, tracked_markers: np.ndarray = None, timeless=False):
         self.models.append(biomod)
-        self.rerun_models.append(ModelUpdater(name=f"{self.name}/{self.nb_models}_{biomod.name}", model=biomod))
+
+        self.rerun_models.append(ModelUpdater(name=f"{self.name}/{self.nb_models}_{biomod.name}", model=biomod,
+                                              timeless=self.timeless))
         self.q.append(q)
 
         self.tracked_markers.append(tracked_markers if tracked_markers is not None else None)
@@ -35,6 +38,14 @@ class BiorbdRerunPhase:
             else None
         )
         self.rerun_links.append(updater)
+
+    def update_animated_model(self, q):
+        if not isinstance(q, list):
+            q = [q]
+        for i, rr_model in enumerate(self.rerun_models):
+            rr_model.to_rerun(
+                q[i][:],
+            )
 
     def to_rerun(self, frame: int):
         for i, rr_model in enumerate(self.rerun_models):

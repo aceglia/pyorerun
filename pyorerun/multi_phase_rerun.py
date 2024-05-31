@@ -30,6 +30,9 @@ class MultiPhaseRerun:
     def add_animated_model(self, biomod: BiorbdModel, q: np.ndarray, phase: int = 0, window: str = "animation") -> None:
         self.rerun_biorbd_phases[phase][window].add_animated_model(biomod, q)
 
+    def update_animated_model(self, biomod: BiorbdModel, q: np.ndarray, phase: int = 0, window: str = "animation") -> None:
+        self.rerun_biorbd_phases[phase][window].update_animated_model(biomod, q)
+
     def add_xp_markers(self, name: str, markers: PyoMarkers, phase: int = 0, window: str = "animation") -> None:
         self.rerun_biorbd_phases[phase][window].add_xp_markers(name, markers)
 

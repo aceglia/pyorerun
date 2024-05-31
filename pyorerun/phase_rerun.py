@@ -14,7 +14,7 @@ class PhaseRerun:
     A class to animate a biorbd model in rerun.
     """
 
-    def __init__(self, t_span: np.ndarray, phase: int = 0, window: str = None):
+    def __init__(self, t_span: np.ndarray = None, phase: int = 0, window: str = None, timeless=False, name=None):
         """
         Parameters
         ----------
@@ -25,16 +25,20 @@ class PhaseRerun:
         """
         self.phase = phase
         self.name = f"animation_phase_{self.phase}"
+        self.timeless = timeless
         if window:
             self.name = f"{window}/{self.name}"
+        self.name = name if name else self.name
 
         # same t_span for the phase
+
         self.t_span = t_span
 
-        self.biorbd_models = BiorbdRerunPhase(name=self.name, phase=phase)
+        self.biorbd_models = BiorbdRerunPhase(name=self.name, phase=phase, timeless=timeless)
         self.xp_data = XpRerunPhase(name=self.name, phase=phase)
 
-    def add_animated_model(self, biomod: BiorbdModel, q: np.ndarray, tracked_markers: PyoMarkers = None) -> None:
+    def add_animated_model(self, biomod: BiorbdModel, q: np.ndarray,
+                           tracked_markers: PyoMarkers = None, timeless=False) -> None:
         """
         Add an animated model to the phase.
 
@@ -47,19 +51,33 @@ class PhaseRerun:
         tracked_markers: PyoMarkers
             The markers to display, and sets a link between the model markers and the tracked markers.
         """
-        shape_is_not_consistent = q.shape[1] != self.t_span.shape[0]
-        if shape_is_not_consistent:
-            raise ValueError(
-                f"The shapes of q and tspan are inconsistent. "
-                f"They must have the same length."
-                f"Current shapes are q: {q.shape[1]} and tspan: {self.t_span.shape}."
-            )
+        if self.t_span is not None:
+            shape_is_not_consistent = q.shape[1] != self.t_span.shape[0]
+            if shape_is_not_consistent:
+                raise ValueError(
+                    f"The shapes of q and tspan are inconsistent. "
+                    f"They must have the same length."
+                    f"Current shapes are q: {q.shape[1]} and tspan: {self.t_span.shape}."
+                )
 
         if tracked_markers is None:
-            self.biorbd_models.add_animated_model(biomod, q)
+            self.biorbd_models.add_animated_model(biomod, q, timeless=timeless)
         else:
             self.biorbd_models.add_animated_model(biomod, q, tracked_markers.to_numpy()[:3, :, :])
             self.__add_tracked_markers(biomod, tracked_markers)
+
+    def update_animated_model(self, q: np.ndarray) -> None:
+        """
+        Update the generalized coordinates of the model.
+
+        Parameters
+        ----------
+        biomod: BiorbdModel
+            The biorbd model to display.
+        q: np.ndarray
+            The generalized coordinates of the model.
+        """
+        self.biorbd_models.update_animated_model(q)
 
     def __add_tracked_markers(self, biomod: BiorbdModel, tracked_markers: PyoMarkers) -> None:
         """Add the tracked markers to the phase."""
@@ -115,7 +133,7 @@ class PhaseRerun:
 
     def rerun(self, name: str = "animation_phase", init: bool = True, clear_last_node: bool = False) -> None:
         if init:
-            rr.init(f"{name}_{self.phase}", spawn=True)
+            rr.init(f"{name}", spawn=True)
 
         for frame, t in enumerate(self.t_span):
             rr.set_time_seconds("stable_time", t)
@@ -124,4 +142,9 @@ class PhaseRerun:
 
         if clear_last_node:
             for component in [*self.biorbd_models.component_names, *self.xp_data.component_names]:
-                rr.log(component, rr.Clear(recursive=False))
+                rr.log(component, rr.Clear(recursive=False), timeless=True)
+
+    # def init_live_instance(self, name="test"):
+
+
+

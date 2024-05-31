@@ -6,11 +6,12 @@ from .mesh import TransformableMeshUpdater
 
 
 class SegmentUpdater(Component):
-    def __init__(self, name, transform_callable: callable, mesh: TransformableMeshUpdater):
+    def __init__(self, name, transform_callable: callable, mesh: TransformableMeshUpdater, timeless=False):
         self.name = name
         self.transform_callable = transform_callable
         self.mesh = mesh
         self.local_frame = LocalFrameUpdater(name + "/frame", transform_callable)
+        self.timeless=timeless
 
     @property
     def nb_components(self):
@@ -24,7 +25,8 @@ class SegmentUpdater(Component):
 
     def to_rerun(self, q: np.ndarray) -> None:
         for component in self.components:
-            component.to_rerun(q)
+            component.to_rerun(q
+)
 
     @property
     def component_names(self) -> list[str]:

@@ -15,9 +15,10 @@ from ..biorbd_components.ligaments import LigamentsUpdater, MusclesUpdater
 
 
 class ModelUpdater(Components):
-    def __init__(self, name, model: BiorbdModel):
+    def __init__(self, name, model: BiorbdModel, timeless=False):
         self.name = name
         self.model = model
+        self.timeless=timeless
         self.markers = self.create_markers_updater()
         self.ligaments = self.create_ligaments_updater()
         self.segments = self.create_segments_updater()
@@ -34,6 +35,8 @@ class ModelUpdater(Components):
                 radius=self.model.options.markers_radius,
             ),
             callable_markers=self.model.markers,
+            timeless=self.timeless
+
         )
 
     def create_ligaments_updater(self):
@@ -48,6 +51,8 @@ class ModelUpdater(Components):
                 radius=self.model.options.ligaments_radius,
             ),
             update_callable=self.model.ligament_strips,
+            timeless=self.timeless
+
         )
 
     def create_segments_updater(self):
@@ -60,13 +65,17 @@ class ModelUpdater(Components):
                 segment_index=segment.id,
             )
 
-            if segment.has_mesh:
-                mesh = TransformableMeshUpdater.from_file(segment_name, segment.mesh_path, transform_callable)
+            if segment.has_mesh :
+                mesh = TransformableMeshUpdater.from_file(segment_name, segment.mesh_path, transform_callable,
+                                                          timeless=self.timeless
+)
                 mesh.set_color(self.model.options.mesh_color)
             else:
                 mesh = EmptyUpdater(segment_name + "/mesh")
 
-            segments.append(SegmentUpdater(name=segment_name, transform_callable=transform_callable, mesh=mesh))
+            segments.append(SegmentUpdater(name=segment_name, transform_callable=transform_callable,
+                                           mesh=mesh, timeless=self.timeless
+))
         return segments
 
     def create_muscles_updater(self):
@@ -80,6 +89,7 @@ class ModelUpdater(Components):
                 radius=self.model.options.muscles_radius,
             ),
             update_callable=self.model.muscle_strips,
+            timeless=self.timeless
         )
 
     @property

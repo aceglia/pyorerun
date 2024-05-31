@@ -5,10 +5,11 @@ from ..abstract.linestrip import LineStrips, LineStripProperties
 
 
 class LineStripUpdater(LineStrips):
-    def __init__(self, name, properties: LineStripProperties, update_callable: callable):
+    def __init__(self, name, properties: LineStripProperties, update_callable: callable, timeless=False):
         self.name = name
         self.properties = properties
         self.update_callable = update_callable
+        self.timeless = timeless
 
     @property
     def nb_strips(self) -> int:
@@ -27,27 +28,29 @@ class LineStripUpdater(LineStrips):
                 colors=self.properties.color_to_rerun(),
                 labels=self.properties.strip_names,
             ),
+            timeless=self.timeless
+
         )
 
 
 class LigamentsUpdater(LineStripUpdater):
-    def __init__(self, name, properties: LineStripProperties, update_callable: callable):
+    def __init__(self, name, properties: LineStripProperties, update_callable: callable, timeless=False):
         super(LigamentsUpdater, self).__init__(
-            name=name + "/ligaments", properties=properties, update_callable=update_callable
+            name=name + "/ligaments", properties=properties, update_callable=update_callable, timeless=timeless
         )
 
 
 class MusclesUpdater(LineStripUpdater):
-    def __init__(self, name, properties: LineStripProperties, update_callable: callable):
+    def __init__(self, name, properties: LineStripProperties, update_callable: callable, timeless=False):
         super(MusclesUpdater, self).__init__(
-            name=name + "/muscles", properties=properties, update_callable=update_callable
+            name=name + "/muscles", properties=properties, update_callable=update_callable, timeless=timeless
         )
 
 
 class ModelMarkerLinkUpdater(LineStripUpdater):
-    def __init__(self, name, properties: LineStripProperties, update_callable: callable):
+    def __init__(self, name, properties: LineStripProperties, update_callable: callable, timeless=False):
         super(ModelMarkerLinkUpdater, self).__init__(
-            name=name + "/marker_links", properties=properties, update_callable=update_callable
+            name=name + "/marker_links", properties=properties, update_callable=update_callable, timeless=timeless
         )
 
     def line_strips(self, q: np.ndarray, markers: np.ndarray) -> np.ndarray:
@@ -77,5 +80,7 @@ class ModelMarkerLinkUpdater(LineStripUpdater):
                 radii=self.properties.radius_to_rerun(),
                 colors=self.properties.color_to_rerun(),
                 # labels=self.properties.strip_names,
+
             ),
+            timeless=self.timeless
         )
