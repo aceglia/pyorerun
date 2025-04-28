@@ -27,13 +27,13 @@ class BiorbdRerunPhase:
     def add_animated_model(self, biomod: BiorbdModel, q: np.ndarray, tracked_markers: np.ndarray = None, timeless=False):
         self.models.append(biomod)
 
-        self.rerun_models.append(ModelUpdater(name=f"{self.name}/{self.nb_models}_{biomod.name}", model=biomod,
+        self.rerun_models.append(ModelUpdater(name=f"{self.name}/model", model=biomod,
                                               timeless=self.timeless))
         self.q.append(q)
 
         self.tracked_markers.append(tracked_markers if tracked_markers is not None else None)
         updater = (
-            ModelMarkerLinksUpdater(name=f"{self.name}/{self.nb_models}_{biomod.name}", model=biomod)
+            ModelMarkerLinksUpdater(name=f"{self.name}/model", model=biomod)
             if tracked_markers is not None
             else None
         )
