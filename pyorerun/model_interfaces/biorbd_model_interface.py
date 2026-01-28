@@ -4,12 +4,13 @@ import biorbd
 import numpy as np
 from biorbd import GeneralizedCoordinates
 
-from ..model_components.model_display_options import DisplayModelOptions
+# Import the abstract classes
+from .abstract_model_interface import AbstractModel, AbstractModelNoMesh, AbstractSegment
 
 MINIMAL_SEGMENT_MASS = 1e-08
 
 
-class BiorbdSegment:
+class BiorbdSegment(AbstractSegment):  # Inherits from AbstractSegment
     """
     An interface to simplify the access to a segment of a biorbd model
     """
@@ -30,14 +31,14 @@ class BiorbdSegment:
     def has_mesh(self) -> bool:
         has_mesh = self.segment.characteristics().mesh().hasMesh()
         if has_mesh:
-            return not self.mesh_path.endswith("/")  # Avoid empty mesh path
+            return not self.mesh_path[0].endswith("/")  # Avoid empty mesh path
         return has_mesh
 
     @cached_property
     def has_meshlines(self) -> bool:
         has_mesh = self.segment.characteristics().mesh().hasMesh()
         if has_mesh:
-            return self.mesh_path.endswith("/")  # Avoid empty mesh path
+            return self.mesh_path[0].endswith("/")  # Avoid empty mesh path
         return has_mesh
 
     @cached_property
@@ -45,9 +46,9 @@ class BiorbdSegment:
         return [self.segment.characteristics().mesh().path().absolutePath().to_string()]
 
     @cached_property
-    def scale_factor(self) -> list[np.ndarray]:
+    def mesh_scale_factor(self) -> list[np.ndarray]:
         """
-        return: numpy array (3,) of the scale factor of the mesh 
+        return: numpy array (3,) of the scale factor of the mesh
         """
         return [self.segment.characteristics().mesh().getScale().to_array()]
 
@@ -56,15 +57,14 @@ class BiorbdSegment:
         return self.segment.characteristics().mass()
 
 
-class BiorbdModelNoMesh:
+class BiorbdModelNoMesh(AbstractModelNoMesh):  # Inherits from AbstractModelNoMesh
     """
     A class to handle a biorbd model and its transformations
     """
 
     def __init__(self, path: str, options=None):
-        self.path = path
+        super().__init__(path, options)
         self.model = biorbd.Model(path)
-        self.options: DisplayModelOptions = options if options is not None else DisplayModelOptions()
 
     @classmethod
     def from_biorbd_object(cls, model: biorbd.Model, options=None):
@@ -258,7 +258,7 @@ class BiorbdModelNoMesh:
         return tuple(radii)
 
 
-class BiorbdModel(BiorbdModelNoMesh):
+class BiorbdModel(BiorbdModelNoMesh, AbstractModel):  # Inherits from BiorbdModelNoMesh and AbstractModel
     """
     This class extends the BiorbdModelNoMesh class and overrides the segments property.
     It filters the segments to only include those that have a mesh.
