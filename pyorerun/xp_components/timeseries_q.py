@@ -32,6 +32,8 @@ class OsimTimeSeries:
         """
         Returns True if the .mot file is in degrees, False otherwise.
         """
+        if 'inDegrees' not in self.motion_data.getTableMetaDataKeys():
+            return False
         return self.motion_data.getTableMetaDataAsString("inDegrees") == "yes"
 
     @property

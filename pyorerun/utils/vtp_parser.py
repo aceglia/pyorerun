@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 
 
@@ -68,45 +70,45 @@ def read_vtp_file(filename: str) -> dict:
         - "polygons": np.ndarray (The polygons)
 
     """
+    mesh_dictionary = {}
+    if os.path.exists(filename):
+        mesh_dictionary = {"N_Obj": 1}  # Only 1 object per file
+        with open(filename, "r") as file:
+            content = file.readlines()
 
-    mesh_dictionary = {"N_Obj": 1}  # Only 1 object per file
+        type_ = None
+        i = 0
 
-    with open(filename, "r") as file:
-        content = file.readlines()
+        for ligne in content:
+            if "<Piece" in ligne:
+                num_points = extract_number_from_line(ligne, 'NumberOfPoints="')
+                num_polys = extract_number_from_line(ligne, 'NumberOfPolys="')
 
-    type_ = None
-    i = 0
+                mesh_dictionary["normals"] = np.zeros((num_points, 3))
+                mesh_dictionary["nodes"] = np.zeros((num_points, 3))
+                mesh_dictionary["polygons"] = np.zeros((num_polys, 3))
 
-    for ligne in content:
-        if "<Piece" in ligne:
-            num_points = extract_number_from_line(ligne, 'NumberOfPoints="')
-            num_polys = extract_number_from_line(ligne, 'NumberOfPolys="')
+            elif '<PointData Normals="Normals">' in ligne:
+                type_ = "normals"
+                i = 0
+            elif "<Points>" in ligne:
+                type_ = "nodes"
+                i = 0
+            elif "<Polys>" in ligne:
+                type_ = "polygons"
+                i = 0
+            elif 'Name="offsets"' in ligne:
+                type_ = None
+            elif "<" not in ligne and type_ is not None:
+                i += 1
+                tmp = np.fromstring(ligne, sep=" ")
 
-            mesh_dictionary["normals"] = np.zeros((num_points, 3))
-            mesh_dictionary["nodes"] = np.zeros((num_points, 3))
-            mesh_dictionary["polygons"] = np.zeros((num_polys, 3))
+                if type_ == "polygons":
+                    tmp = handle_polygons_shape(mesh_dictionary=mesh_dictionary, polygon_apex_idx=tmp)
 
-        elif '<PointData Normals="Normals">' in ligne:
-            type_ = "normals"
-            i = 0
-        elif "<Points>" in ligne:
-            type_ = "nodes"
-            i = 0
-        elif "<Polys>" in ligne:
-            type_ = "polygons"
-            i = 0
-        elif 'Name="offsets"' in ligne:
-            type_ = None
-        elif "<" not in ligne and type_ is not None:
-            i += 1
-            tmp = np.fromstring(ligne, sep=" ")
+                if mesh_dictionary[type_][i - 1, :].shape[0] == 3 and tmp.shape[0] == 6:
+                    raise NotImplementedError("This vtp file cannot be cleaned yet to get triangles.")
 
-            if type_ == "polygons":
-                tmp = handle_polygons_shape(mesh_dictionary=mesh_dictionary, polygon_apex_idx=tmp)
+                mesh_dictionary[type_][i - 1, :] = tmp
 
-            if mesh_dictionary[type_][i - 1, :].shape[0] == 3 and tmp.shape[0] == 6:
-                raise NotImplementedError("This vtp file cannot be cleaned yet to get triangles.")
-
-            mesh_dictionary[type_][i - 1, :] = tmp
-
-    return mesh_dictionary
+        return mesh_dictionary

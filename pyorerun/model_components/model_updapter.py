@@ -1,4 +1,5 @@
 from functools import partial
+import os
 from typing import Any
 
 import numpy as np
@@ -151,6 +152,8 @@ class ModelUpdater(Components):
             if segment.has_mesh:
                 meshes = []
                 for m_idx, m in enumerate(segment.mesh_path):
+                    if not os.path.exists(m):
+                        continue
                     mesh_transform_callable = partial(
                         self.model.mesh_homogenous_matrices_in_global, segment_index=segment.id, mesh_index=m_idx
                     )
